@@ -1,0 +1,16 @@
+[Unit]
+Description=Dummy Java Application
+After=network.target
+
+[Service]
+User={{ ansible_user }}
+ExecStart=/usr/bin/java -jar /opt/dummyapp/project2_dummy_service-1.0-SNAPSHOT.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+
+

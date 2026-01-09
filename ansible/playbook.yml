@@ -1,0 +1,47 @@
+- hosts: app
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Instalacija jdk 
+      ansible.builtin.apt:
+        name: openjdk-17-jdk
+        state: present
+        update_cache: yes
+
+    - name: Kreiranje direktorijuma za aplikaciju
+      ansible.builtin.file:
+        path: /opt/dummyapp
+        state: directory
+        owner: azureuser
+        group: azureuser
+        mode: '0755'
+
+    - name: Kopiranje java aplikacije (.jar) na server
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/project2_dummy_service-1.0-SNAPSHOT.jar"
+        dest: /opt/dummyapp/project2_dummy_service-1.0-SNAPSHOT.jar
+        owner: azureuser
+        group: azureuser
+        mode: '0755'
+
+    - name: Postavljanje systemd servisa za dummy aplikaciju
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/dummyapp.service.j2"
+        dest: /etc/systemd/system/dummyapp.service
+        mode: '0644'
+
+    - name: Startovanje servisa i podesavanje da se podize na boot
+      ansible.builtin.systemd:
+        name: dummyapp
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Provera da li je dummyapp servis uspesno pokrenut
+      ansible.builtin.command: systemctl is-active dummyapp
+      register: dummyapp_status
+      changed_when: false
+      failed_when: dummyapp_status.stdout | trim != "active"
+
+
+
